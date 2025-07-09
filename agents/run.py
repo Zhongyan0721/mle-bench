@@ -93,43 +93,76 @@ def run_in_container(
     retain_container: bool,
     run_dir: Path,
     logger: logging.Logger,
+    research_task=None,  # Added research_task parameter
 ) -> Path:
     """
-    Runs environment containing the competition and agent for a set maximum amount of time.
+    Runs environment containing the competition/research task and agent for a set maximum amount of time.
 
     Args:
         client: Docker client.
-        competition: The competition to run.
+        competition: The competition to run (can be None for research tasks).
         agent: The agent to run.
         image: The Docker image to use. Assumes the image is built.
         container_config: Configuration for the Docker container.
         retain_container: Whether to retain the container after the run instead of removing it.
         run_dir: Path to the directory where all assets associated with the run are stored.
         logger: Logger for the run.
+        research_task: Optional research task to run (used when agent.task_type is "research").
 
     Returns:
         Path to the output file.
     """
-    volumes_config = {
-        competition.public_dir.resolve().as_posix(): {
-            "bind": "/home/data",
-            "mode": "ro",
-        },
-        competition.private_dir.resolve().as_posix(): {
-            "bind": f"/private/data/{competition.id}/prepared/private/",
-            "mode": "ro",
-        },
-    }
+    volumes_config = {}
+    env_vars = {**agent.env_vars}
+    
+    # Set up volumes and environment variables based on task type
+    if agent.task_type == "mle" and competition is not None:
+        # Original MLE task setup
+        volumes_config = {
+            competition.public_dir.resolve().as_posix(): {
+                "bind": "/home/data",
+                "mode": "ro",
+            },
+            competition.private_dir.resolve().as_posix(): {
+                "bind": f"/private/data/{competition.id}/prepared/private/",
+                "mode": "ro",
+            },
+        }
+        env_vars["COMPETITION_ID"] = competition.id
+        env_vars["TASK_TYPE"] = "mle"
+    
+    elif agent.task_type == "research" and research_task is not None:
+        # Research task setup
+        volumes_config = {
+            research_task.instruction_path.resolve().as_posix(): {
+                "bind": "/home/instruction.txt",
+                "mode": "ro",
+            },
+            research_task.data_dir.resolve().as_posix(): {
+                "bind": "/home/data",
+                "mode": "ro",
+            },
+        }
+        
+        # If ground truth is available, mount it (for evaluation)
+        if research_task.ground_truth_path and research_task.ground_truth_path.exists():
+            volumes_config[research_task.ground_truth_path.resolve().as_posix()] = {
+                "bind": "/private/ground_truth.json",
+                "mode": "ro",
+            }
+        
+        env_vars["RESEARCH_TASK_ID"] = research_task.id
+        env_vars["TASK_TYPE"] = "research"
+    
+    else:
+        raise ValueError(f"Invalid task configuration: task_type={agent.task_type}, competition={competition}, research_task={research_task}")
 
     container = create_competition_container(
         client=client,
-        competition=competition,
+        competition=competition if agent.task_type == "mle" else None,
         container_config=container_config,
         volumes_config=volumes_config,
-        env_vars={
-            "COMPETITION_ID": competition.id,
-            **agent.env_vars,
-        },
+        env_vars=env_vars,
         container_image=image,
         privileged=agent.privileged,
     )

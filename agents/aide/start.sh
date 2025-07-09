@@ -34,40 +34,64 @@ format_time() {
 }
 export TIME_LIMIT=$(format_time $TIME_LIMIT_SECS)
 
-# overwrite instructions.txt with instructions_obfuscated.txt if $OBFUSCATE is set
-if [ "$OBFUSCATE" = "true" ]; then
-  if [ ! -w /home/data/ ]; then
-    echo "Obfuscation not implemented for read-only mounts"
-    exit 1
+# start a new file to store the full instructions
+# Check task type and set up instructions accordingly
+if [ "$TASK_TYPE" = "research" ]; then
+  # Research task setup
+  if [ -f /home/research_instructions.txt ]; then
+    cp /home/research_instructions.txt ${AGENT_DIR}/full_instructions.txt
+  else
+    cp /home/instructions.txt ${AGENT_DIR}/full_instructions.txt
   fi
-  mv /home/instructions_obfuscated.txt /home/instructions.txt
-fi
-
-# start a new file to store the full instructions, starting with general instructions
-cp /home/instructions.txt ${AGENT_DIR}/full_instructions.txt
-
-# Update instructions for agent-specific details: replace `/home/` paths to make paths relative
-# (since the agent will have its own copies of these files in its workspace).
-# e.g. /home/submission/submission.csv -> submission/submission.csv
-sed -i 's|/home/||g' ${AGENT_DIR}/full_instructions.txt
-# we'll take care of moving things to home/submission/ ourselves
-
-# move on to agent-specific instructions, with a linebreak in between
-# substitute env variables into additional_notes.txt and append result to full_instructions.txt
-echo "" >> ${AGENT_DIR}/full_instructions.txt
-envsubst < ${AGENT_DIR}/additional_notes.txt >> ${AGENT_DIR}/full_instructions.txt
-# finally, append the comp instructions, with a linebreak in between
-printf "\nCOMPETITION INSTRUCTIONS\n------\n\n" >> ${AGENT_DIR}/full_instructions.txt
-
-# overwrite description.md with description_obfuscated.md if $OBFUSCATE is set
-if [ "$OBFUSCATE" = "true" ]; then
-  if [ ! -w /home/data/ ]; then
-    echo "Obfuscation not implemented for read-only mounts"
-    exit 1
+  
+  # Update instructions for agent-specific details: replace `/home/` paths to make paths relative
+  sed -i 's|/home/||g' ${AGENT_DIR}/full_instructions.txt
+  
+  # Append agent-specific instructions
+  echo "" >> ${AGENT_DIR}/full_instructions.txt
+  envsubst < ${AGENT_DIR}/additional_notes.txt >> ${AGENT_DIR}/full_instructions.txt
+  
+  # Append research task instructions
+  printf "\nRESEARCH TASK INSTRUCTIONS\n------\n\n" >> ${AGENT_DIR}/full_instructions.txt
+  cat /home/instruction.txt >> ${AGENT_DIR}/full_instructions.txt
+  
+  # Create submission directory structure for research tasks
+  mkdir -p ${SUBMISSION_DIR}
+  touch ${SUBMISSION_DIR}/conclusions.json
+else
+  # Original MLE task setup
+  # overwrite instructions.txt with instructions_obfuscated.txt if $OBFUSCATE is set
+  if [ "$OBFUSCATE" = "true" ]; then
+    if [ ! -w /home/data/ ]; then
+      echo "Obfuscation not implemented for read-only mounts"
+      exit 1
+    fi
+    mv /home/instructions_obfuscated.txt /home/instructions.txt
   fi
-  mv /home/data/description_obfuscated.md /home/data/description.md
+
+  # start a new file to store the full instructions, starting with general instructions
+  cp /home/instructions.txt ${AGENT_DIR}/full_instructions.txt
+
+  # Update instructions for agent-specific details: replace `/home/` paths to make paths relative
+  sed -i 's|/home/||g' ${AGENT_DIR}/full_instructions.txt
+  
+  # Append agent-specific instructions
+  echo "" >> ${AGENT_DIR}/full_instructions.txt
+  envsubst < ${AGENT_DIR}/additional_notes.txt >> ${AGENT_DIR}/full_instructions.txt
+  
+  # Append competition instructions
+  printf "\nCOMPETITION INSTRUCTIONS\n------\n\n" >> ${AGENT_DIR}/full_instructions.txt
+
+  # overwrite description.md with description_obfuscated.md if $OBFUSCATE is set
+  if [ "$OBFUSCATE" = "true" ]; then
+    if [ ! -w /home/data/ ]; then
+      echo "Obfuscation not implemented for read-only mounts"
+      exit 1
+    fi
+    mv /home/data/description_obfuscated.md /home/data/description.md
+  fi
+  cat /home/data/description.md >> ${AGENT_DIR}/full_instructions.txt
 fi
-cat /home/data/description.md >> ${AGENT_DIR}/full_instructions.txt
 
 # symbolic linking
 # agent will write to AGENT_DIR/workspaces/exp/ and AGENT_DIR/logs/exp

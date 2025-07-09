@@ -116,7 +116,7 @@ def extract_from_container(container: Container, container_file_path: str, local
 
 def create_competition_container(
     client: DockerClient,
-    competition: Competition,
+    competition: Optional[Competition],
     container_config: dict,
     volumes_config: dict,
     env_vars: dict,
@@ -124,11 +124,11 @@ def create_competition_container(
     privileged: bool = False,
 ) -> Container:
     """
-    Creates a container for the given competition, mounting the competition data and agent volumes.
+    Creates a container for the given competition or research task, mounting the appropriate data and agent volumes.
 
     Args:
         client: Docker client to interact with Docker.
-        competition: Competition object
+        competition: Competition object (can be None for research tasks)
         container_config: Docker configuration for the container.
         volumes_config: Docker bind-mount configuration for the container.
         env_vars: Environment variables to pass to the container.
@@ -140,10 +140,21 @@ def create_competition_container(
     """
     unique_id = str(uuid.uuid4().hex)
     timestamp = get_timestamp()
+    
+    # Determine container name based on task type
+    task_type = env_vars.get("TASK_TYPE", "mle")
+    
+    if task_type == "mle" and competition is not None:
+        container_name = f"competition-{competition.id}-{timestamp}-{unique_id}"
+    elif task_type == "research":
+        research_task_id = env_vars.get("RESEARCH_TASK_ID", "unknown")
+        container_name = f"research-{research_task_id}-{timestamp}-{unique_id}"
+    else:
+        container_name = f"task-{timestamp}-{unique_id}"
 
     container = client.containers.create(
         image=container_image,
-        name=f"competition-{competition.id}-{timestamp}-{unique_id}",
+        name=container_name,
         detach=True,
         **parse_container_config(container_config),
         volumes=volumes_config,

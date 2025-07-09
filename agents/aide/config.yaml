@@ -6,6 +6,7 @@ defaults: &defaults
   start: aide/start.sh
   dockerfile: aide/Dockerfile
   kwargs_type: omegaconf
+  task_type: mle
   env_vars: &env_vars
     TIME_LIMIT_SECS: *time_limit
     STEP_LIMIT: *step_count
@@ -141,3 +142,16 @@ aide/obfuscated:
     <<: *env_vars
     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     OBFUSCATE: "true"
+
+# Research task configuration
+aide/research:
+  <<: *defaults
+  task_type: research
+  kwargs:
+    <<: *kwargs_common
+    agent.code.model: gpt-4o-2024-08-06
+    agent.feedback.model: gpt-4o-2024-08-06
+    agent.steps: *step_count
+  env_vars:
+    <<: *env_vars
+    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -2,6 +2,10 @@
 
 Code for the paper ["MLE-Bench: Evaluating Machine Learning Agents on Machine Learning Engineering"](https://arxiv.org/abs/2410.07095). We have released the code used to construct the dataset, the evaluation logic, as well as the agents we evaluated for this benchmark.
 
+## InsightBench Extension
+
+MLE-bench now includes InsightBench, an extension that allows agents to work on research tasks instead of ML engineering tasks. InsightBench provides a framework for evaluating LLM agents on their ability to analyze data and draw conclusions from research papers. See the [InsightBench README](insightBench/README.md) for more details.
+
 ## Leaderboard
 
 | Agent | Low == Lite (%) | Medium (%) | High (%) | All (%) | Date | Grading Reports Available |

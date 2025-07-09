@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Literal
 
 import yaml
 
@@ -21,12 +21,14 @@ class Agent:
     env_vars: dict
     privileged: bool = False
     kwargs_type: Optional[str] = None
+    task_type: Literal["mle", "research"] = "mle"  # Added task_type field
 
     def __post_init__(self):
         assert isinstance(self.start, Path), "Agent start script must be a pathlib.Path object."
         assert isinstance(self.dockerfile, Path), "Agent dockerfile must be a pathlib.Path object."
         assert isinstance(self.kwargs, dict), "Agent kwargs must be a dictionary."
         assert isinstance(self.privileged, bool), "Agent privileged must be a boolean."
+        assert self.task_type in ["mle", "research"], "Task type must be either 'mle' or 'research'."
 
         if self.kwargs_type is not None:
             assert isinstance(self.kwargs_type, str), "Agent kwargs_type must be a string."
@@ -52,6 +54,7 @@ class Agent:
                 kwargs_type=data.get("kwargs_type", None),
                 env_vars=data.get("env_vars", {}),
                 privileged=data.get("privileged", False),
+                task_type=data.get("task_type", "mle"),  # Default to "mle" for backward compatibility
             )
         except KeyError as e:
             raise ValueError(f"Missing key {e} in agent config!")

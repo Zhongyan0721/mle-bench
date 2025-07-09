@@ -1,0 +1,16 @@
+You are tasked with analyzing the data from Figure 1 of the paper "Example Paper 1". 
+
+The data represents a time series of measurements taken from an experiment. Your task is to:
+
+1. Identify any trends or patterns in the data
+2. Calculate the mean, median, and standard deviation of the measurements
+3. Determine if there are any outliers in the dataset
+4. Provide a brief interpretation of what these results might mean in the context of the paper
+
+The data is provided in the 'data' directory. Use the appropriate tools to load and analyze this data.
+
+Your conclusions should be structured as a JSON object with the following keys:
+- "trends": A list of identified trends or patterns
+- "statistics": An object containing the mean, median, and standard deviation
+- "outliers": A list of identified outliers (if any)
+- "interpretation": A brief textual interpretation of the results
