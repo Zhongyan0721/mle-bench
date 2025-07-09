@@ -30,8 +30,10 @@ class Task:
     path_to_run_group: Path
     path_to_run: Path
     agent: Agent
-    competition: Competition
+    competition: Competition | None
     container_config: dict[str, Any]
+    dataset_dir: Path | None = None
+    prompt_file: Path | None = None
 
 
 async def worker(
@@ -52,9 +54,14 @@ async def worker(
         run_logger.addHandler(log_file_handler)
         run_logger.propagate = False
 
-        run_logger.info(
-            f"[Worker {idx}] Running seed {task.seed} for {task.competition.id} and agent {task.agent.name}"
-        )
+        if task.competition is not None:
+            run_logger.info(
+                f"[Worker {idx}] Running seed {task.seed} for {task.competition.id} and agent {task.agent.name}"
+            )
+        else:
+            run_logger.info(
+                f"[Worker {idx}] Running seed {task.seed} on research task {task.dataset_dir} and agent {task.agent.name}"
+            )
 
         task_output = {}
         try:
@@ -68,20 +75,31 @@ async def worker(
                 retain_container=args.retain,
                 run_dir=task.path_to_run,
                 logger=run_logger,
+                dataset_dir=task.dataset_dir,
+                prompt_file=task.prompt_file,
             )
             task_output["success"] = True
 
-            run_logger.info(
-                f"[Worker {idx}] Finished running seed {task.seed} for {task.competition.id} and agent {task.agent.name}"
-            )
+            if task.competition is not None:
+                run_logger.info(
+                    f"[Worker {idx}] Finished running seed {task.seed} for {task.competition.id} and agent {task.agent.name}"
+                )
+            else:
+                run_logger.info(
+                    f"[Worker {idx}] Finished running seed {task.seed} for research task and agent {task.agent.name}"
+                )
         except Exception as e:
             stack_trace = traceback.format_exc()
             run_logger.error(type(e))
             run_logger.error(stack_trace)
-            run_logger.error(
-                f"Run failed for seed {task.seed}, agent {task.agent.id} and competition "
-                f"{task.competition.id}"
-            )
+            if task.competition is not None:
+                run_logger.error(
+                    f"Run failed for seed {task.seed}, agent {task.agent.id} and competition {task.competition.id}"
+                )
+            else:
+                run_logger.error(
+                    f"Run failed for seed {task.seed}, agent {task.agent.id} on research task"
+                )
             task_output["success"] = False
         finally:
             tasks_outputs[task.run_id] = task_output
@@ -105,16 +123,21 @@ async def main(args):
 
     run_group = f"{get_timestamp()}_run-group_{agent.name}"
 
-    # Load competition ids and check all are prepared
-    with open(args.competition_set, "r") as f:
-        competition_ids = [line.strip() for line in f.read().splitlines() if line.strip()]
-    for competition_id in competition_ids:
-        competition = registry.get_competition(competition_id)
-        if not is_dataset_prepared(competition):
-            raise ValueError(
-                f"Dataset for competition `{competition.id}` is not prepared! "
-                f"Please run `mlebench prepare -c {competition.id}` to prepare the dataset."
-            )
+    # Determine tasks
+    if args.task_dir:
+        competition_ids = []
+    elif args.competition_set:
+        with open(args.competition_set, "r") as f:
+            competition_ids = [line.strip() for line in f.read().splitlines() if line.strip()]
+        for competition_id in competition_ids:
+            competition = registry.get_competition(competition_id)
+            if not is_dataset_prepared(competition):
+                raise ValueError(
+                    f"Dataset for competition `{competition.id}` is not prepared! "
+                    f"Please run `mlebench prepare -c {competition.id}` to prepare the dataset."
+                )
+    else:
+        raise ValueError("Either --task-dir or --competition-set must be provided")
 
     with open(args.container_config, "r") as f:
         container_config = json.load(f)
@@ -122,22 +145,42 @@ async def main(args):
     # Create tasks for each (competition * seed)
     logger.info(f"Launching run group: {run_group}")
     tasks = []
-    for seed in range(args.n_seeds):
-        for competition_id in competition_ids:
-            competition = registry.get_competition(competition_id)
-            run_dir = create_run_dir(competition.id, agent.id, run_group)
+    if args.task_dir:
+        dataset_dir = Path(args.task_dir).resolve() / "data"
+        prompt_file = Path(args.prompt_file) if args.prompt_file else Path(args.task_dir) / "instruction.txt"
+        for seed in range(args.n_seeds):
+            run_dir = create_run_dir(Path(args.task_dir).stem, agent.id, run_group)
             run_id = run_dir.stem
             task = Task(
                 run_id=run_id,
                 seed=seed,
                 image=agent.name,
                 agent=agent,
-                competition=competition,
+                competition=None,
                 path_to_run_group=run_dir.parent,
                 path_to_run=run_dir,
                 container_config=container_config,
+                dataset_dir=dataset_dir,
+                prompt_file=prompt_file,
             )
             tasks.append(task)
+    else:
+        for seed in range(args.n_seeds):
+            for competition_id in competition_ids:
+                competition = registry.get_competition(competition_id)
+                run_dir = create_run_dir(competition.id, agent.id, run_group)
+                run_id = run_dir.stem
+                task = Task(
+                    run_id=run_id,
+                    seed=seed,
+                    image=agent.name,
+                    agent=agent,
+                    competition=competition,
+                    path_to_run_group=run_dir.parent,
+                    path_to_run=run_dir,
+                    container_config=container_config,
+                )
+                tasks.append(task)
 
     logger.info(f"Creating {args.n_workers} workers to serve {len(tasks)} tasks...")
 
@@ -175,7 +218,7 @@ async def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Run an agent on a set of competitions in a Docker container."
+        description="Run an agent on a set of competitions or custom research tasks in a Docker container."
     )
     parser.add_argument(
         "--agent-id",
@@ -185,8 +228,20 @@ if __name__ == "__main__":
     parser.add_argument(
         "--competition-set",
         type=str,
-        required=True,
+        required=False,
         help="Path to a text file with a single competition ID on each line",
+    )
+    parser.add_argument(
+        "--task-dir",
+        type=str,
+        required=False,
+        help="Path to a research task directory",
+    )
+    parser.add_argument(
+        "--prompt-file",
+        type=str,
+        required=False,
+        help="Optional path to a prompt file. Defaults to <task-dir>/instruction.txt",
     )
     parser.add_argument(
         "--n-workers",
