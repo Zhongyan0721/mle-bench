@@ -1,0 +1,35 @@
+{
+  "id": "deep_learning_image_classification",
+  "name": "Deep Learning Image Classification",
+  "description": "Build a neural network for image classification using PyTorch or TensorFlow",
+  "task_type": "deep_learning",
+  "difficulty": "hard",
+  "estimated_time": 5400,
+  "data_requirements": {
+    "generate_synthetic": true,
+    "dataset_type": "image_classification",
+    "n_samples": 5000,
+    "image_size": [32, 32],
+    "n_classes": 10,
+    "n_channels": 3
+  },
+  "evaluation_criteria": {
+    "min_accuracy": 0.75,
+    "max_training_time": 3600,
+    "required_outputs": ["model.pth", "training_log.json", "predictions.csv"]
+  },
+  "instructions": "You are given an image classification dataset with 5000 32x32 RGB images across 10 classes. Your task is to:\n\n1. Load and explore the image dataset\n2. Implement data preprocessing and augmentation\n3. Design a convolutional neural network architecture\n4. Implement training loop with proper validation\n5. Use techniques like:\n   - Data augmentation\n   - Batch normalization\n   - Dropout for regularization\n   - Learning rate scheduling\n   - Early stopping\n6. Monitor training with metrics and loss curves\n7. Evaluate on test set and generate predictions\n8. Save the trained model as 'model.pth'\n9. Log training progress in 'training_log.json'\n10. Save test predictions in 'predictions.csv'\n11. Create visualizations of:\n    - Training/validation curves\n    - Sample predictions with confidence\n    - Confusion matrix\n\nTarget: Achieve >75% accuracy on test set within 1 hour of training.",
+  "expected_outputs": [
+    "model.pth",
+    "training_log.json",
+    "predictions.csv",
+    "training_curves.png",
+    "confusion_matrix.png",
+    "sample_predictions.png"
+  ],
+  "metadata": {
+    "tags": ["deep_learning", "computer_vision", "neural_networks", "pytorch", "tensorflow"],
+    "difficulty_factors": ["architecture_design", "training_optimization", "regularization"],
+    "learning_objectives": ["cnn_design", "training_techniques", "model_optimization"]
+  }
+}

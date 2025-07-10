@@ -1,0 +1,29 @@
+{
+  "id": "regression_basic",
+  "name": "Basic Regression Task",
+  "description": "Train a regression model on synthetic data and achieve minimum R² score",
+  "task_type": "regression",
+  "difficulty": "easy",
+  "estimated_time": 1800,
+  "data_requirements": {
+    "generate_synthetic": true,
+    "dataset_type": "regression",
+    "n_samples": 1000,
+    "n_features": 8,
+    "noise": 0.1
+  },
+  "evaluation_criteria": {
+    "min_r2": 0.6,
+    "required_outputs": ["predictions.csv", "model_analysis.txt"]
+  },
+  "instructions": "You are given a regression dataset with 1000 samples and 8 features. Your task is to:\n\n1. Load and explore the data\n2. Perform feature engineering if needed\n3. Train a regression model\n4. Evaluate the model performance\n5. Save predictions in 'predictions.csv' with columns 'true_values' and 'predicted_values'\n6. Create a model analysis in 'model_analysis.txt' including feature importance\n\nTarget: Achieve at least R² = 0.6 on the test set.",
+  "expected_outputs": [
+    "predictions.csv",
+    "model_analysis.txt"
+  ],
+  "metadata": {
+    "tags": ["machine_learning", "regression", "supervised_learning"],
+    "difficulty_factors": ["feature_engineering", "model_selection"],
+    "learning_objectives": ["regression_modeling", "feature_importance", "model_evaluation"]
+  }
+}

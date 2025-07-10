@@ -1,0 +1,33 @@
+{
+  "id": "data_analysis_exploratory",
+  "name": "Exploratory Data Analysis Task",
+  "description": "Perform comprehensive exploratory data analysis on a dataset",
+  "task_type": "data_analysis",
+  "difficulty": "medium",
+  "estimated_time": 2400,
+  "data_requirements": {
+    "generate_synthetic": true,
+    "dataset_type": "classification",
+    "n_samples": 2000,
+    "n_features": 15,
+    "n_classes": 4
+  },
+  "evaluation_criteria": {
+    "required_visualizations": 5,
+    "required_insights": 3,
+    "required_outputs": ["analysis_report.md", "summary_statistics.json"]
+  },
+  "instructions": "You are given a dataset with 2000 samples and 15 features. Your task is to perform comprehensive exploratory data analysis:\n\n1. Load and examine the dataset structure\n2. Generate summary statistics for all variables\n3. Identify and handle missing values\n4. Create at least 5 meaningful visualizations:\n   - Distribution plots for key variables\n   - Correlation heatmap\n   - Box plots for outlier detection\n   - Scatter plots for relationships\n   - Class distribution plots\n5. Identify patterns, trends, and anomalies\n6. Provide actionable insights and recommendations\n7. Create a comprehensive analysis report in 'analysis_report.md'\n8. Save summary statistics in 'summary_statistics.json'\n\nFocus on storytelling with data and providing business-relevant insights.",
+  "expected_outputs": [
+    "analysis_report.md",
+    "summary_statistics.json",
+    "distribution_plot.png",
+    "correlation_heatmap.png",
+    "outlier_analysis.png"
+  ],
+  "metadata": {
+    "tags": ["data_analysis", "visualization", "statistics"],
+    "difficulty_factors": ["comprehensive_analysis", "insight_generation", "visualization"],
+    "learning_objectives": ["exploratory_analysis", "data_visualization", "statistical_thinking"]
+  }
+}

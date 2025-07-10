@@ -1,0 +1,79 @@
+vars:
+  time_limit: &time_limit 3600  # 1 hour default
+  step_count: &step_count 100
+
+defaults: &defaults
+  start: experiment/start.sh
+  dockerfile: experiment/Dockerfile
+  kwargs_type: argparse
+  env_vars: &env_vars
+    TIME_LIMIT_SECS: *time_limit
+    STEP_LIMIT: *step_count
+
+# General experiment agent
+experiment:
+  <<: *defaults
+  kwargs:
+    task-type: general
+    time-limit: *time_limit
+  env_vars:
+    <<: *env_vars
+    EXPERIMENT_NAME: "general_experiment"
+    TASK_TYPE: "general"
+
+# Data analysis focused agent
+experiment/data-analysis:
+  <<: *defaults
+  kwargs:
+    task-type: data_analysis
+    time-limit: *time_limit
+  env_vars:
+    <<: *env_vars
+    EXPERIMENT_NAME: "data_analysis_experiment"
+    TASK_TYPE: "data_analysis"
+
+# Machine learning focused agent
+experiment/ml:
+  <<: *defaults
+  kwargs:
+    task-type: machine_learning
+    time-limit: *time_limit
+  env_vars:
+    <<: *env_vars
+    EXPERIMENT_NAME: "ml_experiment"
+    TASK_TYPE: "machine_learning"
+
+# Deep learning focused agent
+experiment/dl:
+  <<: *defaults
+  kwargs:
+    task-type: deep_learning
+    time-limit: *time_limit
+  env_vars:
+    <<: *env_vars
+    EXPERIMENT_NAME: "dl_experiment"
+    TASK_TYPE: "deep_learning"
+
+# Development version with shorter time limit
+experiment/dev:
+  <<: *defaults
+  kwargs:
+    task-type: general
+    time-limit: 600  # 10 minutes
+  env_vars:
+    TIME_LIMIT_SECS: 600
+    STEP_LIMIT: 10
+    EXPERIMENT_NAME: "dev_experiment"
+    TASK_TYPE: "general"
+
+# Long-running experiment version
+experiment/long:
+  <<: *defaults
+  kwargs:
+    task-type: general
+    time-limit: 14400  # 4 hours
+  env_vars:
+    TIME_LIMIT_SECS: 14400
+    STEP_LIMIT: 500
+    EXPERIMENT_NAME: "long_experiment"
+    TASK_TYPE: "general"

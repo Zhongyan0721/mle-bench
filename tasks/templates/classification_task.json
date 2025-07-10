@@ -1,0 +1,29 @@
+{
+  "id": "classification_basic",
+  "name": "Basic Classification Task",
+  "description": "Train a classification model on synthetic data and achieve minimum accuracy threshold",
+  "task_type": "classification",
+  "difficulty": "easy",
+  "estimated_time": 1800,
+  "data_requirements": {
+    "generate_synthetic": true,
+    "dataset_type": "classification",
+    "n_samples": 1000,
+    "n_features": 10,
+    "n_classes": 3
+  },
+  "evaluation_criteria": {
+    "min_accuracy": 0.7,
+    "required_outputs": ["predictions.csv", "model_summary.txt"]
+  },
+  "instructions": "You are given a classification dataset with 1000 samples, 10 features, and 3 classes. Your task is to:\n\n1. Load and explore the data\n2. Preprocess the data as needed\n3. Train a classification model\n4. Evaluate the model performance\n5. Save predictions in 'predictions.csv' with columns 'true_labels' and 'predicted_labels'\n6. Create a model summary in 'model_summary.txt'\n\nTarget: Achieve at least 70% accuracy on the test set.",
+  "expected_outputs": [
+    "predictions.csv",
+    "model_summary.txt"
+  ],
+  "metadata": {
+    "tags": ["machine_learning", "classification", "supervised_learning"],
+    "difficulty_factors": ["basic_preprocessing", "standard_metrics"],
+    "learning_objectives": ["data_preprocessing", "model_training", "evaluation"]
+  }
+}

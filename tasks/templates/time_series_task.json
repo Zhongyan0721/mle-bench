@@ -1,0 +1,32 @@
+{
+  "id": "time_series_forecasting",
+  "name": "Time Series Forecasting Task",
+  "description": "Build a time series forecasting model with trend and seasonality",
+  "task_type": "time_series",
+  "difficulty": "medium",
+  "estimated_time": 3600,
+  "data_requirements": {
+    "generate_synthetic": true,
+    "dataset_type": "time_series",
+    "n_samples": 1000,
+    "n_features": 3,
+    "trend": true,
+    "seasonality": true
+  },
+  "evaluation_criteria": {
+    "max_mape": 15.0,
+    "required_outputs": ["forecasts.csv", "model_diagnostics.txt", "forecast_plot.png"]
+  },
+  "instructions": "You are given a time series dataset with 1000 time points and 3 features. Your task is to:\n\n1. Load and explore the time series data\n2. Analyze trends, seasonality, and patterns\n3. Prepare the data for forecasting (handle missing values, create features)\n4. Split data into train/validation/test sets (70/15/15)\n5. Build and train a forecasting model\n6. Generate forecasts for the test period\n7. Evaluate forecast accuracy using MAPE, MAE, and RMSE\n8. Create visualizations showing:\n   - Original time series with trend/seasonality\n   - Forecast vs actual values\n   - Residual analysis\n9. Save forecasts in 'forecasts.csv' with columns 'date', 'actual', 'predicted'\n10. Document model approach and diagnostics in 'model_diagnostics.txt'\n\nTarget: Achieve MAPE < 15% on the test set.",
+  "expected_outputs": [
+    "forecasts.csv",
+    "model_diagnostics.txt",
+    "forecast_plot.png",
+    "residual_analysis.png"
+  ],
+  "metadata": {
+    "tags": ["time_series", "forecasting", "temporal_analysis"],
+    "difficulty_factors": ["seasonality_handling", "trend_analysis", "forecast_evaluation"],
+    "learning_objectives": ["time_series_analysis", "forecasting_methods", "temporal_patterns"]
+  }
+}
