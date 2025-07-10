@@ -153,35 +153,3 @@ def create_competition_container(
 
     logger.info(f"Container created: {container.name}")
     return container
-
-
-def create_task_container(
-    client: DockerClient,
-    dataset_dir: Path,
-    prompt_file: Path,
-    container_config: dict,
-    env_vars: dict,
-    container_image: str = "mlebench-env",
-    privileged: bool = False,
-) -> Container:
-    """Creates a container for a research task."""
-    unique_id = str(uuid.uuid4().hex)
-    timestamp = get_timestamp()
-
-    volumes_config = {
-        dataset_dir.resolve().as_posix(): {"bind": "/home/data", "mode": "ro"},
-        prompt_file.resolve().as_posix(): {"bind": "/home/instructions.txt", "mode": "ro"},
-    }
-
-    container = client.containers.create(
-        image=container_image,
-        name=f"task-{timestamp}-{unique_id}",
-        detach=True,
-        **parse_container_config(container_config),
-        volumes=volumes_config,
-        environment=env_vars,
-        privileged=privileged,
-    )
-
-    logger.info(f"Container created: {container.name}")
-    return container

@@ -9,12 +9,10 @@ from dotenv import dotenv_values
 from agents.registry import Agent
 from environment.utils import (
     create_competition_container,
-    create_task_container,
     extract_from_container,
     extract_from_container_sysbox,
 )
 from mlebench.registry import Competition
-from typing import Optional
 from mlebench.utils import purple
 
 CONSTANTS = dotenv_values(Path(__file__).parent.resolve() / ".shared_env")
@@ -88,24 +86,20 @@ def clean_up(container: Container, logger: logging.Logger, retain: bool = False)
 
 def run_in_container(
     client: docker.DockerClient,
-    competition: Optional[Competition],
+    competition: Competition,
     agent: Agent,
     image: str,
     container_config: dict,
     retain_container: bool,
     run_dir: Path,
     logger: logging.Logger,
-    dataset_dir: Optional[Path] = None,
-    prompt_file: Optional[Path] = None,
 ) -> Path:
     """
-    Runs the environment containing the agent for a set maximum amount of time.
+    Runs environment containing the competition and agent for a set maximum amount of time.
 
     Args:
         client: Docker client.
-        competition: The competition to run, if any.
-        dataset_dir: Dataset directory for research tasks when ``competition`` is ``None``.
-        prompt_file: Instruction file for research tasks when ``competition`` is ``None``.
+        competition: The competition to run.
         agent: The agent to run.
         image: The Docker image to use. Assumes the image is built.
         container_config: Configuration for the Docker container.
@@ -116,42 +110,29 @@ def run_in_container(
     Returns:
         Path to the output file.
     """
-    if competition is not None:
-        volumes_config = {
-            competition.public_dir.resolve().as_posix(): {
-                "bind": "/home/data",
-                "mode": "ro",
-            },
-            competition.private_dir.resolve().as_posix(): {
-                "bind": f"/private/data/{competition.id}/prepared/private/",
-                "mode": "ro",
-            },
-        }
+    volumes_config = {
+        competition.public_dir.resolve().as_posix(): {
+            "bind": "/home/data",
+            "mode": "ro",
+        },
+        competition.private_dir.resolve().as_posix(): {
+            "bind": f"/private/data/{competition.id}/prepared/private/",
+            "mode": "ro",
+        },
+    }
 
-        container = create_competition_container(
-            client=client,
-            competition=competition,
-            container_config=container_config,
-            volumes_config=volumes_config,
-            env_vars={
-                "COMPETITION_ID": competition.id,
-                **agent.env_vars,
-            },
-            container_image=image,
-            privileged=agent.privileged,
-        )
-    else:
-        if dataset_dir is None or prompt_file is None:
-            raise ValueError("dataset_dir and prompt_file must be provided for research tasks")
-        container = create_task_container(
-            client=client,
-            dataset_dir=dataset_dir,
-            prompt_file=prompt_file,
-            container_config=container_config,
-            env_vars={**agent.env_vars},
-            container_image=image,
-            privileged=agent.privileged,
-        )
+    container = create_competition_container(
+        client=client,
+        competition=competition,
+        container_config=container_config,
+        volumes_config=volumes_config,
+        env_vars={
+            "COMPETITION_ID": competition.id,
+            **agent.env_vars,
+        },
+        container_image=image,
+        privileged=agent.privileged,
+    )
 
     logger.info(purple(f"Run started: {run_dir}"))
     try:
